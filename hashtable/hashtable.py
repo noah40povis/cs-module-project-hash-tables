@@ -21,7 +21,12 @@ class HashTable:
     """
 
     def __init__(self, capacity):
-        # Your code here
+        # create a fixed array 
+        self.bucket_array = [None for i in range(capacity)]
+        #state the capacity of array 
+        self.capacity = MIN_CAPACITY
+        #use this count for put and delete 
+        self.count = 0 
 
 
     def get_num_slots(self):
@@ -57,23 +62,22 @@ class HashTable:
 
 
     def djb2(self, key):
-        """
-        DJB2 hash, 32-bit
+        hash = 5381 
+        byte_array = key.encode('utf-8')
 
-        Implement this, and/or FNV-1.
-        """
-        # Your code here
+        for byte in byte_array:
+            hash = ((hash * 33) ^ byte) % 0x100000000 
+        return hash 
 
 
-    def hash_index(self, key):
+    def hash_index(self, key): #DO THIS 
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
-    def put(self, key, value):
+    def put(self, key, value): #do this 
         """
         Store the value with the given key.
 
@@ -82,9 +86,21 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.hash_index(key)
+        entry = HashTableEntry(key, value)
+        storage = self.bucket_array[index]
+        self.count =+ 1
+
+        if storage:
+            self.bucket_array[index] = entry 
+            self.bucket_array[index].next = storage
+        else:
+            self.bucket_array[index] = entry 
+        
 
 
-    def delete(self, key):
+
+    def delete(self, key): #do this 
         """
         Remove the value stored with the given key.
 
@@ -92,10 +108,15 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        # remove the value stored with the given key 
+        if self.get(key):
+            self.put(key, None)
+            self.count -= 1
+        #print a warning if the key is not found. 
+        else:
+            print("Key not found")
 
-
-    def get(self, key):
+    def get(self, key): #do this 
         """
         Retrieve the value stored with the given key.
 
@@ -103,7 +124,15 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        #retrieve the value stored with the given key 
+        index = self.hash_index(key)
+        storage = self.bucket_array[index]
+        while storage:
+            if storage.key == key:
+                return storage.value 
+            storage = storage.next 
+        #returns none if the key is not found 
+        return None
 
 
     def resize(self, new_capacity):
