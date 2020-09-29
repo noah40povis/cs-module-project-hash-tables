@@ -7,6 +7,21 @@ class HashTableEntry:
         self.value = value
         self.next = None
 
+    def get_key(self):
+        return self.key
+    
+    def get_value(self):
+        return self.value 
+    
+    def get_next(self):
+        return self.next 
+    
+    def set_next(self, entry):
+        self.next = entry 
+    
+    def set_value(self, value):
+        self.value = value 
+
 
 # Hash table can't have fewer than this many slots
 MIN_CAPACITY = 8
@@ -26,7 +41,7 @@ class HashTable:
         #state the capacity of array 
         self.capacity = MIN_CAPACITY
         #use this count for put and delete 
-        self.count = 0 
+        self.number_of_items = 0 
 
 
     def get_num_slots(self):
@@ -39,7 +54,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return len(self.bucket_array)
 
 
     def get_load_factor(self):
@@ -49,6 +64,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        return self.number_of_items / self.capacity
 
 
     def fnv1(self, key):
@@ -57,8 +73,15 @@ class HashTable:
 
         Implement this, and/or DJB2.
         """
+        fnv_offset = 14695981039346656037 #offset_basis- from Wikipedia
+        fnv_prime = 1099511628211 #FNV_prime- from Wikipedia
+        hash = fnv_offset
+        key_utf8 = key.encode()
 
-        # Your code here
+        for byte in key_utf8:
+            hash = hash ^ byte
+            hash = hash ^ fnv_prime
+        return hash
 
 
     def djb2(self, key):
@@ -86,16 +109,38 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        # index = self.hash_index(key)
+        # entry = HashTableEntry(key, value)
+        # storage = self.bucket_array[index]
+        # self.count =+ 1
+
+        # if storage:
+        #     self.bucket_array[index] = entry 
+        #     self.bucket_array[index].next = storage
+        # else:
+        #     self.bucket_array[index] = entry 
+        if self.get_load_factor() > .7:
+            self.resize(self.capacity * 2)
+        
         index = self.hash_index(key)
         entry = HashTableEntry(key, value)
-        storage = self.bucket_array[index]
-        self.count =+ 1
+        self.number_of_items += 1 
 
-        if storage:
+        if self.bucket_array[index] == None:
             self.bucket_array[index] = entry 
-            self.bucket_array[index].next = storage
-        else:
-            self.bucket_array[index] = entry 
+        
+        else: 
+            current_node = self.bucket_array[index]
+            while current_node != None:
+                #is the key currently in that node is alrady there overwrite it 
+                if current_node.get_key() == key:
+                    current_node.set_value(value)
+                    return
+                # if there is nothing next set the next to the new entry 
+                elif current_node.get_next() == None:
+                    current_node.set_next(entry)
+                    # 
+                current_node = current_node.get_next() 
         
 
 
@@ -110,11 +155,29 @@ class HashTable:
         """
         # remove the value stored with the given key 
         if self.get(key):
-            self.put(key, None)
-            self.count -= 1
-        #print a warning if the key is not found. 
-        else:
-            print("Key not found")
+            index = self.hash_index(key)
+            current_node = self.bucket_array[index]
+            prev_entry = None
+        else: 
+            print(f"Warning: Tried to delete a value from HashTable but no value exists for key: '{key}'")
+
+        while current_node != None: 
+            if current_node.get_key() == key: 
+                self.number_of_items -= 1 
+                if prev_entry == None: 
+                    current_node.set_value(None)
+                else: 
+                    prev_entry.set_next(current_node.get_next())
+            
+            prev_entry = current_node
+            current_node = current_node.get_next()
+        
+        if self.get_load_factor() < 0.2:
+            new_capacity = self.capacity // 2
+            if new_capacity < MIN_CAPACITY:
+                self.resize(MIN_CAPACITY)
+            else:
+                self.resize(new_capacity)
 
     def get(self, key): #do this 
         """
@@ -126,13 +189,15 @@ class HashTable:
         """
         #retrieve the value stored with the given key 
         index = self.hash_index(key)
-        storage = self.bucket_array[index]
-        while storage:
-            if storage.key == key:
-                return storage.value 
-            storage = storage.next 
-        #returns none if the key is not found 
-        return None
+        entry = self.bucket_array[index]
+        if entry is None: 
+            return None 
+        while entry != None:
+            if entry.get_key() == key:
+                return entry.get_value()
+            entry = entry.get_next()
+        return None 
+
 
 
     def resize(self, new_capacity):
@@ -142,7 +207,16 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        #create variable for old array 
+        old_array = self.bucket_array
+        self.bucket_array = [None] * new_capacity
+        self.capacity = new_capacity
+
+        for index in range(len(old_array)):
+            current_node = old_array[index]
+            while current_node != None:
+                self.put(current_node.get_key(), current_node.get_value())
+                current_node = current_node.get_next()        
 
 
 
