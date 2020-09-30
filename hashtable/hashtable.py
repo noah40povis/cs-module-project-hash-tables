@@ -63,7 +63,8 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        #The load factor is a measure of how full the hash table 
+        # is allowed to get before its capacity is automatically increased.
         return self.number_of_items / self.capacity
 
 
@@ -254,3 +255,6 @@ if __name__ == "__main__":
         print(ht.get(f"line_{i}"))
 
     print("")
+
+#Stretch: When load factor decreases below `0.2`, automatically rehash
+#the table to half its previous size, down to a minimum of 8 slots.
